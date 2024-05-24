@@ -1,13 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
+using FishNet.Object;
 using UnityEngine;
 
-public class MoveCam : MonoBehaviour
+public class MoveCam : NetworkBehaviour
 {
     public Transform cameraPos;
+    private void Update()
+    {
+        Transform();
+    }
 
-    // Update is called once per frame
-    void Update()
+    [Client(RequireOwnership = true)]
+    private void Transform()
     {
         transform.position = cameraPos.position;
     }

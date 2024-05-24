@@ -1,26 +1,25 @@
-using UnityEngine;
 using FishNet.Object;
-public class PlayerCam : NetworkBehaviour
+using UnityEngine;
+
+public class CameraController : NetworkBehaviour
 {
     public float sensX;
     public float sensY;
     public Transform orientation;
     private float xRotation;
     private float yRotation;
-
-//    void Start()
-//    {
-//        Cursor.lockState = CursorLockMode.Locked;
-//        Cursor.visible = false;
-//    }
-
-    void Update()
+    public override void OnStartClient()
     {
-        Rotate();
+        base.OnStartClient();
+        if (!base.IsOwner)
+            return;
+        Camera camera = GetComponent<Camera>();
+        camera.enabled = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
-
     [Client(RequireOwnership = true)]
-    private void Rotate()
+    private void Update()
     {
         float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensX;
         float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensY;

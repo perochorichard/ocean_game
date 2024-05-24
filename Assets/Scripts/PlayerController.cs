@@ -1,8 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
+using FishNet.Object;
 using UnityEngine;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerController : NetworkBehaviour
 {
     [Header("Debug")]
     public float myTime;
@@ -49,6 +48,7 @@ public class PlayerMovement : MonoBehaviour
         readyToJump = true;
     }
 
+    [Client(RequireOwnership = true)]
     void Update()
     {
         myTime = Time.fixedTime;
@@ -62,6 +62,7 @@ public class PlayerMovement : MonoBehaviour
             highestPoint = rb.position.y;
             highestPointSet = true;
         }
+        transform.rotation = orientation.rotation;
     }
 
     private void FixedUpdate()
@@ -76,12 +77,9 @@ public class PlayerMovement : MonoBehaviour
         isMovingHorizontal = (Mathf.Abs(horizontalInput) + Mathf.Abs(verticalInput)) > 0;
 
         if (Input.GetKey(sprintKey))
-        {
             moveSpeed = sprintSpeed;
-        } else
-        {
+        else
             moveSpeed = walkSpeed;
-        }
 
         if (Input.GetKey(jumpKey) && grounded && readyToJump)
         {
@@ -93,20 +91,13 @@ public class PlayerMovement : MonoBehaviour
     private void MovePlayer()
     {
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-        
-        if (grounded)
-        {
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
-        } else if (!grounded)
-        {
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
-        }
+        rb.AddForce(grounded ? moveSpeed * 10f * moveDirection.normalized: moveSpeed * 10f * airMultiplier * moveDirection.normalized, ForceMode.Force);
     }
 
     private void HorizontalSpeedControl()
     {
         // Limit Horizontal Speed to target movespeed
-        Vector3 horizontalVelocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+        Vector3 horizontalVelocity = new(rb.velocity.x, 0f, rb.velocity.z);
         if (horizontalVelocity.magnitude > moveSpeed)
         {
             horizontalVelocity = horizontalVelocity.normalized * moveSpeed;
