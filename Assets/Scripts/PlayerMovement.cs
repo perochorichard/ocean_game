@@ -1,13 +1,29 @@
 using UnityEngine;
 using FishNet.Object;
-using FishNet.Object.Synchronizing;
-using FishNet.Object.Prediction;
 
 public class PlayerMovement : NetworkBehaviour
 {
     public float moveSpeed = 5f;
     public float rotateSpeed = 200f;
+    public float lookSpeed = 2.0f;
+    public float lookXLimit = 45.0f;
+
+    private float rotationX;
+    private float rotationY;
+
+    private Camera playerCamera;
     private Rigidbody rb;
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        if (IsOwner)
+        {
+            playerCamera = Camera.main;
+            playerCamera.transform.position = new Vector3(transform.position.x, transform.position.y + 0.3f, transform.position.z);
+            playerCamera.transform.SetParent(transform, false);
+        }
+    }
 
     // Struct to store movement data
     private struct MoveData
@@ -26,10 +42,24 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (IsOwner)
         {
+            HandleCameraRotation();
+
             MoveData moveData = CollectInput();
             Move(moveData, false);
             MoveServerRpc(moveData);
         }
+    }
+
+    private void HandleCameraRotation()
+    {
+        // Handle vertical rotation
+        rotationX += -Input.GetAxis("Mouse Y") * lookSpeed;
+        rotationX = Mathf.Clamp(rotationX, -lookXLimit, lookXLimit);
+        playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
+
+        // Handle horizontal rotation
+        rotationY += Input.GetAxis("Mouse X") * lookSpeed;
+        transform.localRotation = Quaternion.Euler(0, rotationY, 0);
     }
 
     // Collect input from the player
